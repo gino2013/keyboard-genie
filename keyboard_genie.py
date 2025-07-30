@@ -30,12 +30,12 @@ class KeyboardGenie:
         self.key_press_count = 0    # 當前按鍵的按壓次數
         self.keys_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
         
-        # 設置日誌
+        # 設置日誌，指定UTF-8編碼避免中文字符錯誤
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s',
             handlers=[
-                logging.FileHandler('keyboard_genie.log'),
+                logging.FileHandler('keyboard_genie.log', encoding='utf-8'),
                 logging.StreamHandler()
             ]
         )
@@ -203,7 +203,7 @@ class KeyboardGenie:
                 pass
     
     def press_single_key(self):
-        """按下當前鍵（依序輪換1-9，每個鍵捣10次）"""
+        """按下當前鍵（依序輪換1-9，每個鍵按10次）"""
         try:
             # 確保輸入法正確
             self.ensure_english_input()
@@ -307,7 +307,7 @@ class KeyboardGenie:
         self.click_mouse()
         
         self.logger.info("定時任務已設置:")
-        self.logger.info("- 每30分鐘按一個數字鍵（1-9依序輪換，每個鍵捣10次）")
+        self.logger.info("- 每30分鐘按一個數字鍵（1-9依序輪換，每個鍵按10次）")
         self.logger.info("- 每3分鐘點擊滑鼠左鍵兩次")
     
     def stop(self):
