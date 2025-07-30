@@ -1,22 +1,34 @@
 #!/usr/bin/env python3
 """
 鍵盤精靈 - 自動按鍵程序
-每30分鐘按1,2,3鍵，每3分鐘按4鍵
+按F1鍵開始，每30分鐘按1-9鍵依序輪換（每個鍵挈9次），每3分鐘點擊滑鼠
 """
 
 import time
 import threading
 import logging
 from datetime import datetime
-from pynput.keyboard import Key, Controller
+from pynput.keyboard import Key, Controller, Listener
+from pynput.mouse import Button, Controller as MouseController
+import ctypes
+from ctypes import wintypes
+import os
+import sys
 
 
 class KeyboardGenie:
     def __init__(self):
         self.keyboard = Controller()
+        self.mouse = MouseController()
         self.running = False
         self.timer_30min = None
         self.timer_3min = None
+        self.started = False
+        
+        # 按鍵計數器
+        self.current_key_index = 0  # 當前按鍵索引 (0-8 對應 1-9)
+        self.key_press_count = 0    # 當前按鍵的按壓次數
+        self.keys_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
         
         # 設置日誌
         logging.basicConfig(
@@ -28,53 +40,256 @@ class KeyboardGenie:
             ]
         )
         self.logger = logging.getLogger(__name__)
+        
+        # 檢查是否以管理員身份運行
+        self.check_admin_privileges()
     
-    def press_keys_123(self):
-        """按下1,2,3鍵"""
+    def check_admin_privileges(self):
+        """檢查是否以管理員身份運行"""
         try:
-            keys = ['1', '2', '3']
-            for key in keys:
-                self.keyboard.press(key)
-                self.keyboard.release(key)
-                time.sleep(0.3)
+            is_admin = ctypes.windll.shell32.IsUserAnAdmin()
+            if not is_admin:
+                self.logger.warning("建議以管理員身份運行程式以確保在遊戲中正常工作")
+                self.logger.warning("請右鍵點擊程式選擇'以管理員身份執行'")
+            else:
+                self.logger.info("程式正以管理員身份運行")
+        except:
+            self.logger.warning("無法檢查管理員權限")
+    
+    def send_key_direct(self, key_code):
+        """使用Windows SendInput API直接發送按鍵（確保使用上方數字列）"""
+        try:
+            # 定義Windows結構
+            PUL = ctypes.POINTER(ctypes.c_ulong)
+            class KeyBdInput(ctypes.Structure):
+                _fields_ = [("wVk", ctypes.c_ushort),
+                           ("wScan", ctypes.c_ushort),
+                           ("dwFlags", ctypes.c_ulong),
+                           ("time", ctypes.c_ulong),
+                           ("dwExtraInfo", PUL)]
+
+            class HardwareInput(ctypes.Structure):
+                _fields_ = [("uMsg", ctypes.c_ulong),
+                           ("wParamL", ctypes.c_short),
+                           ("wParamH", ctypes.c_ushort)]
+
+            class MouseInput(ctypes.Structure):
+                _fields_ = [("dx", ctypes.c_long),
+                           ("dy", ctypes.c_long),
+                           ("mouseData", ctypes.c_ulong),
+                           ("dwFlags", ctypes.c_ulong),
+                           ("time", ctypes.c_ulong),
+                           ("dwExtraInfo", PUL)]
+
+            class Input_I(ctypes.Union):
+                _fields_ = [("ki", KeyBdInput),
+                           ("mi", MouseInput),
+                           ("hi", HardwareInput)]
+
+            class Input(ctypes.Structure):
+                _fields_ = [("type", ctypes.c_ulong),
+                           ("ii", Input_I)]
             
-            self.logger.info("按下鍵盤: 1, 2, 3")
+            # 上方數字列的VK代碼和Scan Code映射
+            # 使用Scan Code確保是上方數字列，不是數字鍵盤
+            key_map = {
+                '1': {'vk': 0x31, 'scan': 0x02},  # 上方數字列1
+                '2': {'vk': 0x32, 'scan': 0x03},  # 上方數字列2
+                '3': {'vk': 0x33, 'scan': 0x04},  # 上方數字列3
+                '4': {'vk': 0x34, 'scan': 0x05},  # 上方數字列4
+                '5': {'vk': 0x35, 'scan': 0x06},  # 上方數字列5
+                '6': {'vk': 0x36, 'scan': 0x07},  # 上方數字列6
+                '7': {'vk': 0x37, 'scan': 0x08},  # 上方數字列7
+            }
+            
+            if key_code in key_map:
+                vk_code = key_map[key_code]['vk']
+                scan_code = key_map[key_code]['scan']
+                
+                self.logger.info(f"發送按鍵 {key_code} (VK: 0x{vk_code:02X}, Scan: 0x{scan_code:02X})")
+                
+                # 按下按鍵 - 使用Scan Code確保是正確的按鍵
+                extra = ctypes.c_ulong(0)
+                ii_ = Input_I()
+                # KEYEVENTF_SCANCODE = 0x0008, 使用Scan Code而不Virtual Key
+                ii_.ki = KeyBdInput(0, scan_code, 0x0008, 0, ctypes.pointer(extra))
+                x = Input(ctypes.c_ulong(1), ii_)
+                result1 = ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+                
+                time.sleep(0.05)
+                
+                # 釋放按鍵 - KEYEVENTF_KEYUP | KEYEVENTF_SCANCODE = 0x0002 | 0x0008 = 0x000A
+                ii_.ki = KeyBdInput(0, scan_code, 0x000A, 0, ctypes.pointer(extra))
+                x = Input(ctypes.c_ulong(1), ii_)
+                result2 = ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+                
+                success = result1 > 0 and result2 > 0
+                self.logger.info(f"按鍵 {key_code} 發送結果: {success} (down: {result1}, up: {result2})")
+                return success
+            return False
             
         except Exception as e:
-            self.logger.error(f"按鍵1,2,3時發生錯誤: {e}")
+            self.logger.error(f"直接發送按鍵失敗: {e}")
+            return False
+    
+    def send_mouse_click_direct(self):
+        """使用Windows API直接發送滑鼠點擊"""
+        try:
+            # 滑鼠左鍵按下
+            ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0)  # MOUSEEVENTF_LEFTDOWN
+            time.sleep(0.05)
+            # 滑鼠左鍵釋放
+            ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0)  # MOUSEEVENTF_LEFTUP
+            return True
+        except Exception as e:
+            self.logger.error(f"直接發送滑鼠點擊失敗: {e}")
+            return False
+    
+    def ensure_english_input(self):
+        """確保輸入法為英文小寫"""
+        try:
+            # 取得當前前景視窗
+            user32 = ctypes.windll.user32
+            kernel32 = ctypes.windll.kernel32
+            
+            # 取得當前活動視窗
+            hwnd = user32.GetForegroundWindow()
+            if hwnd == 0:
+                self.logger.warning("無法取得前景視窗")
+                return
+                
+            # 取得視窗的輸入法資訊
+            thread_id = user32.GetWindowThreadProcessId(hwnd, None)
+            hkl = user32.GetKeyboardLayout(thread_id)
+            
+            # 檢查是否為英文輸入法 (0x04090409 為美式英文)
+            if hkl & 0xFFFF != 0x0409:  # 不是英文
+                self.logger.info("切換到英文輸入法")
+                # 嘗試切換到英文輸入法
+                # 方法1: 使用Alt+Shift
+                self.keyboard.press(Key.alt)
+                self.keyboard.press(Key.shift)
+                self.keyboard.release(Key.shift)
+                self.keyboard.release(Key.alt)
+                time.sleep(0.5)
+                
+                # 方法2: 如果還是不行，嘗試Ctrl+Space（常用於中英切換）
+                self.keyboard.press(Key.ctrl)
+                self.keyboard.press(Key.space)
+                self.keyboard.release(Key.space)
+                self.keyboard.release(Key.ctrl)
+                time.sleep(0.5)
+            
+            # 確保Caps Lock關閉（小寫）
+            caps_state = user32.GetKeyState(0x14)  # VK_CAPITAL = 0x14
+            if caps_state & 1:  # Caps Lock開啟
+                self.logger.info("關閉Caps Lock")
+                self.keyboard.press(Key.caps_lock)
+                self.keyboard.release(Key.caps_lock)
+                time.sleep(0.2)
+                
+            self.logger.info("輸入法狀態檢查完成")
+            
+        except Exception as e:
+            self.logger.error(f"切換輸入法時發生錯誤: {e}")
+            # 備用方案：直接嘗試常見的切換組合鍵
+            try:
+                self.keyboard.press(Key.alt)
+                self.keyboard.press(Key.shift)
+                self.keyboard.release(Key.shift)
+                self.keyboard.release(Key.alt)
+                time.sleep(0.5)
+            except:
+                pass
+    
+    def press_single_key(self):
+        """按下當前鍵（依序輪換1-9，每個鍵捣10次）"""
+        try:
+            # 確保輸入法正確
+            self.ensure_english_input()
+            time.sleep(0.5)
+            
+            # 取得當前要按的鍵
+            current_key = self.keys_list[self.current_key_index]
+            self.key_press_count += 1
+            
+            self.logger.info(f"按鍵 {current_key}（第 {self.key_press_count}/10 次）")
+            
+            # 嘗試使用直接API，如果失敗則使用pynput
+            if not self.send_key_direct(current_key):
+                self.logger.info(f"直接API失敗，使用pynput按鍵 {current_key}")
+                self.keyboard.press(current_key)
+                self.keyboard.release(current_key)
+            
+            # 檢查是否需要切換到下一個鍵
+            if self.key_press_count >= 10:
+                self.key_press_count = 0
+                self.current_key_index = (self.current_key_index + 1) % len(self.keys_list)
+                next_key = self.keys_list[self.current_key_index]
+                self.logger.info(f"切換到下一個鍵: {next_key}")
+            
+            self.logger.info(f"按鍵 {current_key} 完成")
+            
+            self.logger.info("按下鍵盤: 1, 2, 3, 5, 6, 7")
+            
+        except Exception as e:
+            self.logger.error(f"按鍵時發生錯誤: {e}")
         finally:
             if self.running:
                 self.schedule_30min_task()
     
-    def press_key_4(self):
-        """按下4鍵"""
+    def click_mouse(self):
+        """點擊滑鼠左鍵兩次"""
         try:
-            self.keyboard.press('4')
-            self.keyboard.release('4')
-            self.logger.info("按下鍵盤: 4")
+            # 點擊滑鼠左鍵兩次，間隔更長
+            self.logger.info("正在點擊滑鼠第1次")
+            if not self.send_mouse_click_direct():
+                self.mouse.click(Button.left, 1)
+            time.sleep(0.5)
+            self.logger.info("正在點擊滑鼠第2次")
+            if not self.send_mouse_click_direct():
+                self.mouse.click(Button.left, 1)
+            
+            self.logger.info("滑鼠點擊完成")
             
         except Exception as e:
-            self.logger.error(f"按鍵4時發生錯誤: {e}")
+            self.logger.error(f"滑鼠點擊時發生錯誤: {e}")
         finally:
             if self.running:
-                self.schedule_3min_task()
+                self.schedule_1min_task()
     
     def schedule_30min_task(self):
         """安排30分鐘定時任務"""
         if self.running:
-            self.timer_30min = threading.Timer(30 * 60, self.press_keys_123)  # 30分鐘 = 1800秒
+            self.timer_30min = threading.Timer(30 * 60, self.press_single_key)  # 30分鐘 = 1800秒
             self.timer_30min.daemon = True
             self.timer_30min.start()
     
-    def schedule_3min_task(self):
-        """安排3分鐘定時任務"""
+    def schedule_1min_task(self):
+        """安排1分鐘定時任務"""
         if self.running:
-            self.timer_3min = threading.Timer(3 * 60, self.press_key_4)  # 3分鐘 = 180秒
+            self.timer_3min = threading.Timer(1 * 60, self.click_mouse)  # 1分鐘 = 60秒
             self.timer_3min.daemon = True
             self.timer_3min.start()
     
-    def start(self):
-        """啟動鍵盤精靈"""
+    def wait_for_f1_key(self):
+        """等待按下F1鍵"""
+        def on_press(key):
+            try:
+                if key == Key.f1 and not self.started:
+                    self.started = True
+                    self.logger.info("檢測到F1鍵，開始執行自動化")
+                    self.start_automation()
+                    return False  # 停止監聽
+            except AttributeError:
+                pass
+        
+        self.logger.info("等待按下F1鍵開始自動化...")
+        with Listener(on_press=on_press) as listener:
+            listener.join()
+    
+    def start_automation(self):
+        """啟動自動化程序"""
         if self.running:
             self.logger.warning("鍵盤精靈已在運行中")
             return
@@ -82,13 +297,18 @@ class KeyboardGenie:
         self.running = True
         self.logger.info("鍵盤精靈啟動")
         
-        # 立即執行一次，然後開始定時
-        self.press_keys_123()
-        self.press_key_4()
+        # 確保輸入法為英文小寫
+        self.ensure_english_input()
+        time.sleep(1)
+        
+        # 按F1鍵後立即執行一次：先按當前鍵，再點擊滑鼠
+        self.press_single_key()
+        time.sleep(3)  # 等待3秒再執行下一個動作
+        self.click_mouse()
         
         self.logger.info("定時任務已設置:")
-        self.logger.info("- 每30分鐘按1,2,3鍵")
-        self.logger.info("- 每3分鐘按4鍵")
+        self.logger.info("- 每30分鐘按一個數字鍵（1-9依序輪換，每個鍵捣10次）")
+        self.logger.info("- 每3分鐘點擊滑鼠左鍵兩次")
     
     def stop(self):
         """停止鍵盤精靈"""
@@ -106,10 +326,12 @@ def main():
     genie = KeyboardGenie()
     
     try:
-        genie.start()
-        
-        print("鍵盤精靈正在運行...")
+        print("鍵盤精靈已準備就緒")
+        print("按下F1鍵開始自動化")
         print("按 Ctrl+C 停止程序")
+        
+        # 等待F1鍵
+        genie.wait_for_f1_key()
         
         # 保持程序運行
         while genie.running:
