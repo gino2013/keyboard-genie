@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 鍵盤精靈 - 自動按鍵程序
-按F1鍵開始，每30分鐘按1-9鍵依序輪換（每個鍵挈9次），每3分鐘點擊滑鼠
+按F1鍵開始，每20分鐘按1-9鍵依序輪換（每個鍵按10次），每1分鐘點擊滑鼠
 """
 
 import time
@@ -236,7 +236,7 @@ class KeyboardGenie:
             self.logger.error(f"按鍵時發生錯誤: {e}")
         finally:
             if self.running:
-                self.schedule_30min_task()
+                self.schedule_20min_task()
     
     def click_mouse(self):
         """點擊滑鼠左鍵兩次"""
@@ -258,10 +258,10 @@ class KeyboardGenie:
             if self.running:
                 self.schedule_1min_task()
     
-    def schedule_30min_task(self):
-        """安排30分鐘定時任務"""
+    def schedule_20min_task(self):
+        """安排20分鐘定時任務"""
         if self.running:
-            self.timer_30min = threading.Timer(30 * 60, self.press_single_key)  # 30分鐘 = 1800秒
+            self.timer_30min = threading.Timer(20 * 60, self.press_single_key)  # 20分鐘 = 1200秒
             self.timer_30min.daemon = True
             self.timer_30min.start()
     
@@ -307,8 +307,8 @@ class KeyboardGenie:
         self.click_mouse()
         
         self.logger.info("定時任務已設置:")
-        self.logger.info("- 每30分鐘按一個數字鍵（1-9依序輪換，每個鍵按10次）")
-        self.logger.info("- 每3分鐘點擊滑鼠左鍵兩次")
+        self.logger.info("- 每20分鐘按一個數字鍵（1-9依序輪換，每個鍵按10次）")
+        self.logger.info("- 每1分鐘點擊滑鼠左鍵兩次")
     
     def stop(self):
         """停止鍵盤精靈"""
