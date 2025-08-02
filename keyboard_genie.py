@@ -23,12 +23,15 @@ class KeyboardGenie:
         self.running = False
         self.timer_30min = None
         self.timer_3min = None
+        self.timer_480min_8 = None
+        self.timer_480min_9 = None
+        self.key_8_pressed = False  # 追踪key 8是否已按過
         self.started = False
         
         # 按鍵計數器
         self.current_key_index = 0  # 當前按鍵索引 (0-8 對應 1-9)
         self.key_press_count = 0    # 當前按鍵的按壓次數
-        self.keys_list = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+        self.keys_list = ['1', '2', '3', '4', '5', '6', '7']
         
         # 設置日誌，指定UTF-8編碼避免中文字符錯誤
         logging.basicConfig(
@@ -100,6 +103,8 @@ class KeyboardGenie:
                 '5': {'vk': 0x35, 'scan': 0x06},  # 上方數字列5
                 '6': {'vk': 0x36, 'scan': 0x07},  # 上方數字列6
                 '7': {'vk': 0x37, 'scan': 0x08},  # 上方數字列7
+                '8': {'vk': 0x38, 'scan': 0x09},  # 上方數字列8
+                '9': {'vk': 0x39, 'scan': 0x0A},  # 上方數字列9
             }
             
             if key_code in key_map:
@@ -258,6 +263,51 @@ class KeyboardGenie:
             if self.running:
                 self.schedule_1min_task()
     
+    def press_key_8(self):
+        """按下數字鈵8"""
+        try:
+            self.ensure_english_input()
+            time.sleep(0.5)
+            
+            self.logger.info("按下數字鈵8 (480分鐘定時任務)")
+            
+            if not self.send_key_direct('8'):
+                self.logger.info("直接API失敗，使用pynput按鈵8")
+                self.keyboard.press('8')
+                self.keyboard.release('8')
+            
+            self.key_8_pressed = True
+            self.logger.info("數字鈵8按下完成")
+            
+        except Exception as e:
+            self.logger.error(f"按鈵8時發生錯誤: {e}")
+        finally:
+            if self.running:
+                self.schedule_480min_task_9()
+    
+    def press_key_9(self):
+        """按下數字鈵9"""
+        try:
+            self.ensure_english_input()
+            time.sleep(0.5)
+            
+            self.logger.info("按下數字鈵9 (480分鐘定時任務)")
+            
+            if not self.send_key_direct('9'):
+                self.logger.info("直接API失敗，使用pynput按鈵9")
+                self.keyboard.press('9')
+                self.keyboard.release('9')
+            
+            self.logger.info("數字鈵9按下完成")
+            
+        except Exception as e:
+            self.logger.error(f"按鈵9時發生錯誤: {e}")
+        finally:
+            if self.running:
+                # 重新開始480分鐘循環，從鈵8開始
+                self.key_8_pressed = False
+                self.schedule_480min_task_8()
+    
     def schedule_20min_task(self):
         """安排20分鐘定時任務"""
         if self.running:
@@ -271,6 +321,20 @@ class KeyboardGenie:
             self.timer_3min = threading.Timer(1 * 60, self.click_mouse)  # 1分鐘 = 60秒
             self.timer_3min.daemon = True
             self.timer_3min.start()
+    
+    def schedule_480min_task_8(self):
+        """安排480分鐘定時任務按鈵8"""
+        if self.running:
+            self.timer_480min_8 = threading.Timer(480 * 60, self.press_key_8)  # 480分鐘 = 28800秒
+            self.timer_480min_8.daemon = True
+            self.timer_480min_8.start()
+    
+    def schedule_480min_task_9(self):
+        """安排480分鐘定時任務按鈵9"""
+        if self.running:
+            self.timer_480min_9 = threading.Timer(480 * 60, self.press_key_9)  # 480分鐘 = 28800秒
+            self.timer_480min_9.daemon = True
+            self.timer_480min_9.start()
     
     def wait_for_f1_key(self):
         """等待按下F1鍵"""
@@ -306,9 +370,13 @@ class KeyboardGenie:
         time.sleep(3)  # 等待3秒再執行下一個動作
         self.click_mouse()
         
+        # 開始480分鐘定時任務循環
+        self.schedule_480min_task_8()
+        
         self.logger.info("定時任務已設置:")
-        self.logger.info("- 每20分鐘按一個數字鍵（1-9依序輪換，每個鍵按10次）")
+        self.logger.info("- 每20分鐘按一個數字鍵（1-7依序輪換，每個鍵按10次）")
         self.logger.info("- 每1分鐘點擊滑鼠左鍵兩次")
+        self.logger.info("- 480分鐘後按鈵8，再480分鐘後按鈵9（循環）")
     
     def stop(self):
         """停止鍵盤精靈"""
@@ -318,6 +386,10 @@ class KeyboardGenie:
             self.timer_30min.cancel()
         if self.timer_3min:
             self.timer_3min.cancel()
+        if self.timer_480min_8:
+            self.timer_480min_8.cancel()
+        if self.timer_480min_9:
+            self.timer_480min_9.cancel()
         
         self.logger.info("鍵盤精靈已停止")
 
