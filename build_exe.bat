@@ -1,14 +1,14 @@
 @echo off
-chcp 65001 >nul
-title 建置鍵盤精靈執行檔
+chcp 65001 >nul 2>&1
+title Build Keyboard Genie Executable
 
 echo.
 echo ========================================
-echo        建置鍵盤精靈執行檔
+echo      Build Keyboard Genie Executable
 echo ========================================
 echo.
-echo 此腳本將建置獨立的 .exe 執行檔
-echo 用戶將不需要安裝 Python 即可使用
+echo This script will build a standalone .exe file
+echo Users will not need to install Python to use it
 echo.
 
 REM 檢查Python是否已安裝
