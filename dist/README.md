@@ -39,6 +39,9 @@ Double-click `start-valheim-keyboard-genie.bat`
 #### Standalone Executable:
 Use `build-valheim-keyboard-genie.bat` to create `ValheimKeyboardGenie.exe`
 
+#### Ready-to-Use Executable:
+Go to `dist/` folder and double-click `ValheimKeyboardGenie.exe` for immediate use
+
 ### Controls
 
 1. Program waits for F1 key press after startup
@@ -104,6 +107,9 @@ python valheim_keyboard_genie.py
 #### 獨立執行檔：
 使用 `build-valheim-keyboard-genie.bat` 創建 `ValheimKeyboardGenie.exe`
 
+#### 即用執行檔：
+進入 `dist/` 資料夾，雙擊 `ValheimKeyboardGenie.exe` 即可直接使用
+
 ### 操作控制
 
 1. 程序啟動後會等待按下 F1 鍵
@@ -154,7 +160,7 @@ valheim-keyboard-genie/
 - `start-valheim-keyboard-genie.bat` - Automatic setup and launch / 自動設置並啟動
 
 ### For Non-Technical Users / 非技術用戶  
-- `ValheimKeyboardGenie.exe` - Standalone executable / 獨立執行檔
+- `dist/ValheimKeyboardGenie.exe` - Ready-to-use standalone executable / 即用獨立執行檔
 
 ### For Developers / 開發者
 - Direct Python execution / 直接執行 Python
