@@ -1,0 +1,169 @@
+===============================================
+        Valheim Keyboard Genie - User Manual
+===============================================
+
+📋 Quick Start:
+1. Double-click "start-valheim-keyboard-genie.bat" file
+2. Follow the on-screen instructions
+3. Press F1 key to start automation
+4. Press F2 key to stop automation
+
+===============================================
+
+🔧 System Requirements:
+• Windows Operating System
+• Python 3.6 or higher
+• Internet connection (for first-time package installation)
+
+===============================================
+
+📁 File Description:
+• valheim_keyboard_genie.py - Main program file
+• start-valheim-keyboard-genie.bat - English startup script
+• build-valheim-keyboard-genie.bat - Build script for executable
+• user-manual.txt - This manual file
+
+===============================================
+
+⚙️ Program Features:
+• Press keys 1-7 in rotation every 20 minutes (10 times each)
+• Click left mouse button twice every 2 minutes
+• Press key 8 every 240 minutes (4 hours)
+• Press key 9 after another 240 minutes
+• Loop the above operations continuously
+
+===============================================
+
+🎮 Controls:
+F1 Key - Start automation
+F2 Key - Stop automation
+Ctrl+C - Force quit program
+
+===============================================
+
+⚠️ Important Notes:
+1. Recommended to run as Administrator
+   - Right-click the .bat file
+   - Select "Run as administrator"
+
+2. Do not close the command prompt window while program is running
+
+3. First run will automatically install required packages, internet connection needed
+
+4. If you encounter problems, check:
+   - Python is correctly installed
+   - Internet connection is working
+   - All files are complete
+
+===============================================
+
+🛠️ Troubleshooting:
+
+Problem: "Python not found" error
+Solution:
+1. Download Python: https://www.python.org/downloads/
+2. Check "Add Python to PATH" during installation
+3. Restart computer and try again
+
+Problem: Package installation failed
+Solution:
+1. Check internet connection
+2. Try running as administrator
+3. Manual install: Open command prompt, type pip install pynput
+
+Problem: No effect in game
+Solution:
+1. Run as administrator
+2. Ensure game is in windowed or borderless windowed mode
+
+===============================================
+
+📞 Support:
+For other issues, please check the program's GitHub page or contact the developer.
+
+Last updated: 2025-08-03
+
+===============================================
+        Valheim 鍵盤精靈 - 使用說明
+===============================================
+
+📋 快速開始：
+1. 雙擊 "start-valheim-keyboard-genie.bat" 檔案
+2. 按照螢幕提示操作
+3. 按 F1 鍵開始自動化
+4. 按 F2 鍵停止自動化
+
+===============================================
+
+🔧 系統需求：
+• Windows 作業系統
+• Python 3.6 或更高版本
+• 網路連接（首次運行時安裝套件）
+
+===============================================
+
+📁 檔案說明：
+• valheim_keyboard_genie.py - 主程式檔案
+• start-valheim-keyboard-genie.bat - 英文版啟動檔案
+• build-valheim-keyboard-genie.bat - 建置執行檔腳本
+• user-manual.txt - 本說明檔案
+
+===============================================
+
+⚙️ 程式功能：
+• 每20分鐘按1-7鍵輪換（每個鍵按10次）
+• 每2分鐘點擊滑鼠左鍵兩次
+• 每240分鐘（4小時）按鍵8
+• 再240分鐘後按鍵9
+• 循環執行上述操作
+
+===============================================
+
+🎮 操作說明：
+F1 鍵 - 開始自動化
+F2 鍵 - 停止自動化
+Ctrl+C - 強制結束程式
+
+===============================================
+
+⚠️ 重要提醒：
+1. 建議以「系統管理員身分執行」批處理檔案
+   - 右鍵點擊 .bat 檔案
+   - 選擇「以系統管理員身分執行」
+
+2. 程式運行時請勿關閉命令提示字元視窗
+
+3. 首次運行會自動安裝必要套件，需要網路連接
+
+4. 如遇到問題，請檢查：
+   - Python 是否正確安裝
+   - 網路連接是否正常
+   - 檔案是否完整
+
+===============================================
+
+🛠️ 故障排除：
+
+問題：提示「未找到Python」
+解決：
+1. 下載 Python：https://www.python.org/downloads/
+2. 安裝時勾選「Add Python to PATH」
+3. 重新啟動電腦後再試
+
+問題：套件安裝失敗
+解決：
+1. 檢查網路連接
+2. 嘗試以系統管理員身分執行
+3. 手動安裝：開啟命令提示字元，輸入 pip install pynput
+
+問題：在遊戲中無效果
+解決：
+1. 以系統管理員身分執行
+2. 確保遊戲為視窗模式或無邊框視窗模式
+
+===============================================
+
+📞 支援：
+如有其他問題，請檢查程式的 GitHub 頁面或聯絡開發者。
+
+最後更新：2025-08-03

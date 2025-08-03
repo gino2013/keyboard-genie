@@ -14,7 +14,8 @@
       "Bash(cp:*)",
       "Bash(rmdir:*)",
       "Bash(rm:*)",
-      "Bash(./KeyboardGenie.exe --help)"
+      "Bash(./KeyboardGenie.exe --help)",
+      "Bash(./start-valheim-keyboard-genie.bat)"
     ],
     "deny": []
   }
