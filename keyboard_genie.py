@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 鍵盤精靈 - 自動按鍵程序
-按F1鍵開始，每20分鐘按1-7鍵依序輪換（每個鍵按10次），每2分鐘點擊滑鼠，240分鐘輪換按8、9鍵
+按F1鍵開始，F2鍵停止，每20分鐘按1-7鍵依序輪換（每個鍵按10次），每2分鐘點擊滑鼠，240分鐘輪換按8、9鍵
 """
 
 import time
@@ -27,6 +27,7 @@ class KeyboardGenie:
         self.timer_240min_9 = None
         self.key_8_pressed = False  # 追踪key 8是否已按過
         self.started = False
+        self.global_listener = None  # 全局按鍵監聽器
         
         # 按鍵計數器
         self.current_key_index = 0  # 當前按鍵索引 (0-8 對應 1-9)
@@ -336,6 +337,21 @@ class KeyboardGenie:
             self.timer_240min_9.daemon = True
             self.timer_240min_9.start()
     
+    def start_global_listener(self):
+        """開始全局按鍵監聽器（監聽F2停止鍵）"""
+        def on_press(key):
+            try:
+                if key == Key.f2 and self.running:
+                    self.logger.info("檢測到F2鍵，停止程式")
+                    self.stop()
+                    return False  # 停止監聽
+            except AttributeError:
+                pass
+        
+        self.global_listener = Listener(on_press=on_press)
+        self.global_listener.daemon = True
+        self.global_listener.start()
+    
     def wait_for_f1_key(self):
         """等待按下F1鍵"""
         def on_press(key):
@@ -349,6 +365,7 @@ class KeyboardGenie:
                 pass
         
         self.logger.info("等待按下F1鍵開始自動化...")
+        self.logger.info("或按F2鍵停止程式")
         with Listener(on_press=on_press) as listener:
             listener.join()
     
@@ -360,6 +377,9 @@ class KeyboardGenie:
         
         self.running = True
         self.logger.info("鍵盤精靈啟動")
+        
+        # 啟動全局按鍵監聽器（監聽F2停止鍵）
+        self.start_global_listener()
         
         # 確保輸入法為英文小寫
         self.ensure_english_input()
@@ -391,6 +411,10 @@ class KeyboardGenie:
         if self.timer_240min_9:
             self.timer_240min_9.cancel()
         
+        # 停止全局按鍵監聽器
+        if self.global_listener:
+            self.global_listener.stop()
+        
         self.logger.info("鍵盤精靈已停止")
 
 
@@ -400,7 +424,8 @@ def main():
     try:
         print("鍵盤精靈已準備就緒")
         print("按下F1鍵開始自動化")
-        print("按 Ctrl+C 停止程序")
+        print("按下F2鍵停止程序")
+        print("或按 Ctrl+C 停止程序")
         
         # 等待F1鍵
         genie.wait_for_f1_key()
