@@ -145,13 +145,20 @@ python valheim_keyboard_genie.py
 
 ```
 valheim-keyboard-genie/
+├── .gitignore                         # Git ignore rules
+├── CLAUDE.md                          # Project instructions for Claude
 ├── valheim_keyboard_genie.py          # Main program / 主程式
 ├── requirements.txt                   # Python dependencies / Python 依賴
 ├── start-valheim-keyboard-genie.bat   # Startup script / 啟動腳本
 ├── build-valheim-keyboard-genie.bat   # Build executable / 建置執行檔
 ├── user-manual.txt                    # User manual / 用戶手冊
 ├── developer-guide.md                 # Developer guide / 開發者指南
-└── README.md                         # This file / 本檔案
+├── README.md                          # This file / 本檔案
+└── dist/                              # Distribution folder / 分發資料夾
+    ├── ValheimKeyboardGenie.exe       # Ready-to-use executable / 即用執行檔
+    ├── user-manual.txt                # User manual copy / 用戶手冊副本
+    ├── README.md                      # Documentation copy / 說明文件副本
+    └── keyboard_genie.log             # Runtime log / 運行日誌
 ```
 
 ## Distribution Options / 分發選項
