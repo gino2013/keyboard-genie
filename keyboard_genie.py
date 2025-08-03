@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 鍵盤精靈 - 自動按鍵程序
-按F1鍵開始，每20分鐘按1-9鍵依序輪換（每個鍵按10次），每1分鐘點擊滑鼠
+按F1鍵開始，每20分鐘按1-7鍵依序輪換（每個鍵按10次），每2分鐘點擊滑鼠，240分鐘輪換按8、9鍵
 """
 
 import time
@@ -23,8 +23,8 @@ class KeyboardGenie:
         self.running = False
         self.timer_30min = None
         self.timer_3min = None
-        self.timer_480min_8 = None
-        self.timer_480min_9 = None
+        self.timer_240min_8 = None
+        self.timer_240min_9 = None
         self.key_8_pressed = False  # 追踪key 8是否已按過
         self.started = False
         
@@ -261,7 +261,7 @@ class KeyboardGenie:
             self.logger.error(f"滑鼠點擊時發生錯誤: {e}")
         finally:
             if self.running:
-                self.schedule_1min_task()
+                self.schedule_2min_task()
     
     def press_key_8(self):
         """按下數字鈵8"""
@@ -269,7 +269,7 @@ class KeyboardGenie:
             self.ensure_english_input()
             time.sleep(0.5)
             
-            self.logger.info("按下數字鈵8 (480分鐘定時任務)")
+            self.logger.info("按下數字鈵8 (240分鐘定時任務)")
             
             if not self.send_key_direct('8'):
                 self.logger.info("直接API失敗，使用pynput按鈵8")
@@ -283,7 +283,7 @@ class KeyboardGenie:
             self.logger.error(f"按鈵8時發生錯誤: {e}")
         finally:
             if self.running:
-                self.schedule_480min_task_9()
+                self.schedule_240min_task_9()
     
     def press_key_9(self):
         """按下數字鈵9"""
@@ -291,7 +291,7 @@ class KeyboardGenie:
             self.ensure_english_input()
             time.sleep(0.5)
             
-            self.logger.info("按下數字鈵9 (480分鐘定時任務)")
+            self.logger.info("按下數字鈵9 (240分鐘定時任務)")
             
             if not self.send_key_direct('9'):
                 self.logger.info("直接API失敗，使用pynput按鈵9")
@@ -304,9 +304,9 @@ class KeyboardGenie:
             self.logger.error(f"按鈵9時發生錯誤: {e}")
         finally:
             if self.running:
-                # 重新開始480分鐘循環，從鈵8開始
+                # 重新開始240分鐘循環，從鈵8開始
                 self.key_8_pressed = False
-                self.schedule_480min_task_8()
+                self.schedule_240min_task_8()
     
     def schedule_20min_task(self):
         """安排20分鐘定時任務"""
@@ -315,26 +315,26 @@ class KeyboardGenie:
             self.timer_30min.daemon = True
             self.timer_30min.start()
     
-    def schedule_1min_task(self):
-        """安排1分鐘定時任務"""
+    def schedule_2min_task(self):
+        """安排2分鐘定時任務"""
         if self.running:
-            self.timer_3min = threading.Timer(1 * 60, self.click_mouse)  # 1分鐘 = 60秒
+            self.timer_3min = threading.Timer(2 * 60, self.click_mouse)  # 2分鐘 = 120秒
             self.timer_3min.daemon = True
             self.timer_3min.start()
     
-    def schedule_480min_task_8(self):
-        """安排480分鐘定時任務按鈵8"""
+    def schedule_240min_task_8(self):
+        """安排240分鐘定時任務按鈵8"""
         if self.running:
-            self.timer_480min_8 = threading.Timer(480 * 60, self.press_key_8)  # 480分鐘 = 28800秒
-            self.timer_480min_8.daemon = True
-            self.timer_480min_8.start()
+            self.timer_240min_8 = threading.Timer(240 * 60, self.press_key_8)  # 240分鐘 = 14400秒
+            self.timer_240min_8.daemon = True
+            self.timer_240min_8.start()
     
-    def schedule_480min_task_9(self):
-        """安排480分鐘定時任務按鈵9"""
+    def schedule_240min_task_9(self):
+        """安排240分鐘定時任務按鈵9"""
         if self.running:
-            self.timer_480min_9 = threading.Timer(480 * 60, self.press_key_9)  # 480分鐘 = 28800秒
-            self.timer_480min_9.daemon = True
-            self.timer_480min_9.start()
+            self.timer_240min_9 = threading.Timer(240 * 60, self.press_key_9)  # 240分鐘 = 14400秒
+            self.timer_240min_9.daemon = True
+            self.timer_240min_9.start()
     
     def wait_for_f1_key(self):
         """等待按下F1鍵"""
@@ -370,13 +370,13 @@ class KeyboardGenie:
         time.sleep(3)  # 等待3秒再執行下一個動作
         self.click_mouse()
         
-        # 開始480分鐘定時任務循環
-        self.schedule_480min_task_8()
+        # 開始240分鐘定時任務循環
+        self.schedule_240min_task_8()
         
         self.logger.info("定時任務已設置:")
         self.logger.info("- 每20分鐘按一個數字鍵（1-7依序輪換，每個鍵按10次）")
-        self.logger.info("- 每1分鐘點擊滑鼠左鍵兩次")
-        self.logger.info("- 480分鐘後按鈵8，再480分鐘後按鈵9（循環）")
+        self.logger.info("- 每2分鐘點擊滑鼠左鍵兩次")
+        self.logger.info("- 240分鐘後按鈵8，再240分鐘後按鈵9（循環）")
     
     def stop(self):
         """停止鍵盤精靈"""
@@ -386,10 +386,10 @@ class KeyboardGenie:
             self.timer_30min.cancel()
         if self.timer_3min:
             self.timer_3min.cancel()
-        if self.timer_480min_8:
-            self.timer_480min_8.cancel()
-        if self.timer_480min_9:
-            self.timer_480min_9.cancel()
+        if self.timer_240min_8:
+            self.timer_240min_8.cancel()
+        if self.timer_240min_9:
+            self.timer_240min_9.cancel()
         
         self.logger.info("鍵盤精靈已停止")
 
